@@ -25,7 +25,7 @@ export default function RunsPage() {
 
       <div className="overflow-auto border rounded">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 text-gray-900 font-semibold dark:bg-gray-900 dark:text-gray-100">
             <tr>
               <th className="p-2 text-left">created</th>
               <th className="p-2 text-left">scenario</th>
@@ -37,9 +37,9 @@ export default function RunsPage() {
               <th className="p-2 text-left">run_id</th>
             </tr>
           </thead>
-          <tbody>
-            {runs.map((r) => (
-              <tr key={r.run_id} className="border-t">
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+            {runs.map((r, idx) => (
+              <tr key={r.run_id} className={idx % 2 === 0 ? 'bg-white dark:bg-black' : 'bg-gray-50 dark:bg-gray-950'}>
                 <td className="p-2">{r.created_at}</td>
                 <td className="p-2">{r.scenario}</td>
                 <td className="p-2">{r.outcome}</td>

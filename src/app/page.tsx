@@ -2,13 +2,20 @@
 
 import { useState } from 'react';
 
-type Scenario = 'normal' | 'latency' | 'error' | 'security';
+type ScenarioKey = 'normal' | 'latency' | 'error' | 'security';
+
+const SCENARIOS: { key: ScenarioKey; label: string }[] = [
+  { key: 'normal', label: 'Normal' },
+  { key: 'latency', label: 'Latency' },
+  { key: 'error', label: 'Error Storm' },
+  { key: 'security', label: 'Security Event' },
+];
 
 export default function Page() {
   const [last, setLast] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  async function run(scenario: Scenario) {
+  async function run(scenario: ScenarioKey) {
     setLoading(true);
     try {
       const res = await fetch('/api/run', {
@@ -17,7 +24,8 @@ export default function Page() {
         body: JSON.stringify({ scenario }),
       });
       const data = await res.json();
-      setLast(data);
+      // Helpful: keep the HTTP status visible even if body has status_code
+      setLast({ http_status: res.status, ...data });
     } finally {
       setLoading(false);
     }
@@ -37,14 +45,14 @@ export default function Page() {
       </p>
 
       <div className="flex gap-3 flex-wrap">
-        {(['normal', 'latency', 'error', 'security'] as Scenario[]).map((s) => (
+        {SCENARIOS.map((s) => (
           <button
-            key={s}
-            onClick={() => run(s)}
+            key={s.key}
+            onClick={() => run(s.key)}
             disabled={loading}
             className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
           >
-            {s}
+            {s.label}
           </button>
         ))}
         <a className="px-4 py-2 rounded border" href="/runs">
