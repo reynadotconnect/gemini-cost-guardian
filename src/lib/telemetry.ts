@@ -16,6 +16,7 @@ export type RunTelemetry = {
   run_id: string;
   scenario: Scenario;
   outcome: 'ok' | 'error' | 'blocked';
+  status_code: number;
   duration_ms: number;
   cost_usd: number;
   tool_calls: number;
@@ -40,10 +41,15 @@ export async function withRunSpan<T>(
 
     if (telemetry.outcome === 'error') span.setStatus({ code: SpanStatusCode.ERROR });
 
+    span.setAttribute('gcg.status_code', telemetry.status_code);
+
     const full: RunTelemetry = { run_id: input.run_id, scenario: input.scenario, ...telemetry };
 
-    // metrics: all monitors will read these
-    const tags = { scenario: full.scenario, outcome: full.outcome };
+    const tags = {
+      scenario: full.scenario,
+      outcome: full.outcome,
+      status_code: String(full.status_code),
+    };
     hits.add(1, tags);
     durationMs.record(full.duration_ms, tags);
     if (full.outcome === 'error') errors.add(1, tags);

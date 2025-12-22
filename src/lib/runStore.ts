@@ -2,6 +2,7 @@ export type RunRecord = {
   run_id: string;
   scenario: 'normal' | 'latency' | 'error' | 'security';
   outcome: 'ok' | 'error' | 'blocked';
+  status_code: number;
   duration_ms: number;
   cost_usd: number;
   tool_calls: number;

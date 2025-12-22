@@ -26,11 +26,40 @@ export async function runScenario(args: { run_id: string; scenario: Scenario }) 
       await sleep(4500);
       span.end();
     });
+
+    return {
+      outcome: 'ok' as const,
+      status_code: 200,
+      security_flag: false,
+      tool_calls: 0,
+      cost_usd: costByScenario.latency,
+      response_text: 'OK (latency injected)',
+    };
   }
 
   if (args.scenario === 'error') {
     const p = deterministicPercent(args.run_id);
-    if (p < 50) throw new Error('INTENTIONAL_ERROR_STORM');
+    const shouldError = p < 60; // 60% error rate, deterministic per run_id
+
+    if (shouldError) {
+      return {
+        outcome: 'error' as const,
+        status_code: 500,
+        security_flag: false,
+        tool_calls: 0,
+        cost_usd: costByScenario.error,
+        response_text: 'Simulated 500 (demo)',
+      };
+    }
+
+    return {
+      outcome: 'ok' as const,
+      status_code: 200,
+      security_flag: false,
+      tool_calls: 0,
+      cost_usd: costByScenario.error,
+      response_text: 'OK (non-error sample)',
+    };
   }
 
   if (args.scenario === 'security') {
@@ -42,6 +71,7 @@ export async function runScenario(args: { run_id: string; scenario: Scenario }) 
 
     return {
       outcome: 'blocked' as const,
+      status_code: 403,
       security_flag: true,
       tool_calls: 30,
       cost_usd: costByScenario.security,
@@ -49,11 +79,13 @@ export async function runScenario(args: { run_id: string; scenario: Scenario }) 
     };
   }
 
+  // normal
   return {
     outcome: 'ok' as const,
+    status_code: 200,
     security_flag: false,
     tool_calls: 0,
-    cost_usd: costByScenario[args.scenario],
-    response_text: 'OK (stubbed, Vertex disabled for now)',
+    cost_usd: costByScenario.normal,
+    response_text: 'OK (stubbed)',
   };
 }
