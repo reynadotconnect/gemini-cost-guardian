@@ -3,7 +3,7 @@
     {
       "name": "[GCG] Latency Regression (slow runs > 3s)",
       "type": "metric alert",
-      "query": "sum(last_1m):gcg.run.duration_ms.count{scenario:latency,gt:3000} > 3",
+      "query": "count(v: v>3000):gcg.run.duration_ms{scenario:latency}.as_count() > 3",
       "message": "🐌 Latency regression: >3 runs exceeded 3000ms in 1m (scenario:latency)\n\nRunbook:\nCONTAIN: pause traffic; increase min instances\nDIAGNOSE: open APM traces filtered by scenario:latency\nMITIGATE: reduce prompt/max_output_tokens; keep warm instances\nVERIFY: slow-run count returns to 0\n\n@incident-gcg-latency",
       "tags": ["team:hackathon", "project:gcg", "monitor:latency"],
       "priority": 2,
