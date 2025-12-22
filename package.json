@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
-    "start": "next start"
+    "start": "next start",
+    "traffic": "tsx traffic/generate_traffic.ts"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",
