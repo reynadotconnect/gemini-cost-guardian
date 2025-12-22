@@ -11,12 +11,35 @@ const SCENARIOS: { key: ScenarioKey; label: string }[] = [
   { key: 'security', label: 'Security Event' },
 ];
 
+function Spinner() {
+  return (
+    <span
+      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+      aria-label="loading"
+    />
+  );
+}
+
 export default function Page() {
   const [last, setLast] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [activeScenario, setActiveScenario] = useState<ScenarioKey | null>(null);
+  const [showRunning, setShowRunning] = useState(false);
 
   async function run(scenario: ScenarioKey) {
     setLoading(true);
+    setActiveScenario(scenario);
+    setShowRunning(false);
+
+    let didShow = false;
+    const startedAt = Date.now();
+
+    // Don't show "Running..." unless the request lasts > 250ms
+    const showTimer = setTimeout(() => {
+      didShow = true;
+      setShowRunning(true);
+    }, 250);
+
     try {
       const res = await fetch('/api/run', {
         method: 'POST',
@@ -24,10 +47,24 @@ export default function Page() {
         body: JSON.stringify({ scenario }),
       });
       const data = await res.json();
-      // Helpful: keep the HTTP status visible even if body has status_code
       setLast({ http_status: res.status, ...data });
+    } catch (e: any) {
+      setLast({ error: 'request_failed', message: String(e?.message ?? e) });
     } finally {
+      clearTimeout(showTimer);
+
+      // If we showed it, keep it visible for at least 400ms total
+      if (didShow) {
+        const elapsed = Date.now() - startedAt;
+        const minVisible = 400;
+        if (elapsed < minVisible) {
+          await new Promise((r) => setTimeout(r, minVisible - elapsed));
+        }
+      }
+
       setLoading(false);
+      setShowRunning(false);
+      setActiveScenario(null);
     }
   }
 
@@ -50,12 +87,20 @@ export default function Page() {
             key={s.key}
             onClick={() => run(s.key)}
             disabled={loading}
-            className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
+            className="px-4 py-2 rounded bg-black text-white disabled:opacity-50 inline-flex items-center gap-2"
           >
-            {s.label}
+            {loading && activeScenario === s.key && showRunning ? (
+              <>
+                <Spinner />
+                Running…
+              </>
+            ) : (
+              s.label
+            )}
           </button>
         ))}
-        <a className="px-4 py-2 rounded border" href="/runs">
+
+        <a href="/runs" className="px-4 py-2 rounded border border-gray-300 bg-white text-gray-900 hover:bg-gray-50">
           Runs
         </a>
       </div>
@@ -67,9 +112,14 @@ export default function Page() {
             Copy incident summary
           </button>
         </div>
-        <pre className="mt-3 text-xs overflow-auto">
-          {last ? JSON.stringify(last, null, 2) : 'No runs yet.'}
-        </pre>
+
+        {loading && activeScenario && showRunning ? (
+          <div className="mt-3 text-sm text-gray-600">Running scenario…</div>
+        ) : (
+          <pre className="mt-3 text-xs overflow-auto">
+            {last ? JSON.stringify(last, null, 2) : 'No runs yet.'}
+          </pre>
+        )}
       </section>
     </main>
   );
