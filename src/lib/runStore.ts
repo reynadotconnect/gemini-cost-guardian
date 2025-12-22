@@ -1,7 +1,7 @@
 export type RunRecord = {
   run_id: string;
-  scenario: 'normal' | 'latency' | 'error' | 'security';
-  outcome: 'ok' | 'error' | 'blocked';
+  scenario: string;
+  outcome: string;
   status_code: number;
   duration_ms: number;
   cost_usd: number;
@@ -10,13 +10,22 @@ export type RunRecord = {
   created_at: string;
 };
 
-const runs: RunRecord[] = [];
-
-export function addRun(r: RunRecord) {
-  runs.unshift(r);
-  if (runs.length > 20) runs.length = 20;
+declare global {
+  // eslint-disable-next-line no-var
+  var __gcgRuns: RunRecord[] | undefined;
 }
 
-export function listRuns() {
-  return runs;
+function store(): RunRecord[] {
+  if (!globalThis.__gcgRuns) globalThis.__gcgRuns = [];
+  return globalThis.__gcgRuns;
+}
+
+export function addRun(r: RunRecord) {
+  const s = store();
+  s.unshift(r);
+  if (s.length > 20) s.length = 20;
+}
+
+export function getRuns(limit = 20): RunRecord[] {
+  return store().slice(0, limit);
 }

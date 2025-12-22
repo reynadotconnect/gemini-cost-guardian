@@ -31,8 +31,8 @@ export async function POST(req: Request) {
     };
   });
 
-  console.log(JSON.stringify({
-    msg: 'gcg.run_end',
+  // ✅ this is what populates /runs
+  addRun({
     run_id,
     scenario,
     outcome: telemetry.outcome,
@@ -41,9 +41,24 @@ export async function POST(req: Request) {
     cost_usd: telemetry.cost_usd,
     tool_calls: telemetry.tool_calls,
     security_flag: telemetry.security_flag,
-    trace_id,
     created_at,
-  }));
+  });
+
+  console.log(
+    JSON.stringify({
+      msg: 'gcg.run_end',
+      run_id,
+      scenario,
+      outcome: telemetry.outcome,
+      status_code: telemetry.status_code,
+      duration_ms: telemetry.duration_ms,
+      cost_usd: telemetry.cost_usd,
+      tool_calls: telemetry.tool_calls,
+      security_flag: telemetry.security_flag,
+      trace_id,
+      created_at,
+    })
+  );
 
   return NextResponse.json({ ...result, trace_id }, { status: telemetry.status_code });
 }
