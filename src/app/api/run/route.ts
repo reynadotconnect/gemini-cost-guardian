@@ -14,22 +14,25 @@ export async function POST(req: Request) {
     const created_at = new Date().toISOString();
     const started = Date.now();
 
-    const { result, telemetry, trace_id } = await withRunSpan({ run_id, scenario }, async () => {
-        const s = await runScenario({ run_id, scenario });
-        const duration_ms = Date.now() - started;
+    const { result, telemetry, trace_id } = await withRunSpan(
+        { run_id, scenario },
+        async runCtx => {
+            const s = await runScenario({ run_id, scenario }, runCtx);
+            const duration_ms = Date.now() - started;
 
-        return {
-            result: { run_id, scenario, ...s, duration_ms },
-            telemetry: {
-                outcome: s.outcome,
-                status_code: s.status_code,
-                duration_ms,
-                cost_usd: s.cost_usd,
-                tool_calls: s.tool_calls,
-                security_flag: s.security_flag,
-            },
-        };
-    });
+            return {
+                result: { run_id, scenario, ...s, duration_ms },
+                telemetry: {
+                    outcome: s.outcome,
+                    status_code: s.status_code,
+                    duration_ms,
+                    cost_usd: s.cost_usd,
+                    tool_calls: s.tool_calls,
+                    security_flag: s.security_flag,
+                },
+            };
+        }
+    );
 
     // this is what populates /runs
     addRun({
