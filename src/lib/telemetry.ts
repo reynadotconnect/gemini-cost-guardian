@@ -27,40 +27,43 @@ export async function withRunSpan<T>(
     input: { run_id: string; scenario: Scenario },
     fn: () => Promise<{ result: T; telemetry: Omit<RunTelemetry, 'run_id' | 'scenario'> }>
 ): Promise<{ result: T; telemetry: RunTelemetry; trace_id: string }> {
-    const span = tracer.startSpan('gcg.run', {
-        attributes: { 'gcg.run_id': input.run_id, 'gcg.scenario': input.scenario },
+    return tracer.startActiveSpan('gcg.run', async span => {
+        span.setAttribute('gcg.run_id', input.run_id);
+        span.setAttribute('gcg.scenario', input.scenario);
+
+        try {
+            const { result, telemetry } = await fn();
+            const full: RunTelemetry = {
+                run_id: input.run_id,
+                scenario: input.scenario,
+                ...telemetry,
+            };
+
+            span.setAttribute('gcg.outcome', full.outcome);
+            span.setAttribute('gcg.security_flag', full.security_flag);
+            span.setAttribute('gcg.tool_calls', full.tool_calls);
+            span.setAttribute('gcg.cost_usd', full.cost_usd);
+            span.setAttribute('gcg.status_code', full.status_code);
+            span.setAttribute('gcg.duration_ms', full.duration_ms);
+
+            if (full.outcome === 'error') span.setStatus({ code: SpanStatusCode.ERROR });
+
+            const tags = {
+                scenario: full.scenario,
+                outcome: full.outcome,
+                status_code: String(full.status_code),
+            };
+
+            hits.add(1, tags);
+            durationMs.record(full.duration_ms, tags);
+            if (full.outcome === 'error') errors.add(1, tags);
+            if (full.security_flag) securityEvents.add(1, tags);
+            toolCalls.add(full.tool_calls, tags);
+            costUsd.add(full.cost_usd, tags);
+
+            return { result, telemetry: full, trace_id: span.spanContext().traceId };
+        } finally {
+            span.end();
+        }
     });
-
-    const start = Date.now();
-    try {
-        const { result, telemetry } = await fn();
-        span.setAttribute('gcg.outcome', telemetry.outcome);
-        span.setAttribute('gcg.security_flag', telemetry.security_flag);
-        span.setAttribute('gcg.tool_calls', telemetry.tool_calls);
-        span.setAttribute('gcg.cost_usd', telemetry.cost_usd);
-
-        if (telemetry.outcome === 'error') span.setStatus({ code: SpanStatusCode.ERROR });
-
-        span.setAttribute('gcg.status_code', telemetry.status_code);
-
-        const full: RunTelemetry = { run_id: input.run_id, scenario: input.scenario, ...telemetry };
-
-        const tags = {
-            scenario: full.scenario,
-            outcome: full.outcome,
-            status_code: String(full.status_code),
-        };
-        hits.add(1, tags);
-        durationMs.record(full.duration_ms, tags);
-        if (full.outcome === 'error') errors.add(1, tags);
-        if (full.security_flag) securityEvents.add(1, tags);
-        toolCalls.add(full.tool_calls, tags);
-        costUsd.add(full.cost_usd, tags);
-
-        return { result, telemetry: full, trace_id: span.spanContext().traceId };
-    } finally {
-        span.end();
-        // duration is computed in handler (so deterministic). kept here for symmetry.
-        void start;
-    }
 }
