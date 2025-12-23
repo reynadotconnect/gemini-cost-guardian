@@ -9,6 +9,10 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { AggregationTemporality, MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
 
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+
+
 declare global {
   // eslint-disable-next-line no-var
   var __gcgOtelInitialized: boolean | undefined;
@@ -36,10 +40,8 @@ export async function register() {
   }
 
   const ddApiKey = process.env.DD_API_KEY;
-  if (!ddApiKey) {
-    console.warn('[OTel] DD_API_KEY missing; skipping init');
-    return;
-  }
+  const headers: Record<string, string> | undefined =
+    ddApiKey ? { 'dd-api-key': ddApiKey } : undefined;
 
   const serviceName = process.env.OTEL_SERVICE_NAME || 'gemini-cost-guardian';
   const attrs = parseAttrs(process.env.OTEL_RESOURCE_ATTRIBUTES);
@@ -59,9 +61,9 @@ export async function register() {
 
   // Traces
 const traceExporter = new OTLPTraceExporter({
-	url: tracesEndpoint,
-	headers: { 'dd-api-key': ddApiKey },
-	});
+  url: tracesEndpoint,
+  headers,
+});
 
 const tracerProvider = new NodeTracerProvider({
 	resource,
@@ -74,7 +76,7 @@ tracerProvider.register();
   const metricReader = new PeriodicExportingMetricReader({
     exporter: new OTLPMetricExporter({
       url: metricsEndpoint,
-      headers: { 'dd-api-key': ddApiKey },
+      headers,
       temporalityPreference: AggregationTemporality.DELTA,
     }),
     exportIntervalMillis: 10_000,
@@ -82,6 +84,12 @@ tracerProvider.register();
 
   const meterProvider = new MeterProvider({ resource, readers: [metricReader] });
   apiMetrics.setGlobalMeterProvider(meterProvider);
+
+  registerInstrumentations({
+    tracerProvider,
+    meterProvider,
+    instrumentations: [getNodeAutoInstrumentations()],
+  });
 
   console.log('[OTel] initialized', { serviceName, serviceVersion, environment });
 
