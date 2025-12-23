@@ -1,5 +1,6 @@
 import type { Scenario } from './telemetry';
 import { context, trace, SpanStatusCode, type Context } from '@opentelemetry/api';
+import { generateWithGemini } from './gemini';
 
 function sleep(ms: number) {
     return new Promise(r => setTimeout(r, ms));
@@ -25,6 +26,28 @@ export async function runScenario(
     const scenarioCtx = trace.setSpan(ctx0, scenarioSpan);
 
     try {
+        const costByScenario: Record<Scenario, number> = {
+            normal: 0.02,
+            latency: 0.05,
+            error: 0.01,
+            security: 0.5,
+        };
+
+        if (args.scenario === 'normal') {
+            const text = await generateWithGemini(scenarioCtx, 'Say "ok" in one word.');
+            scenarioSpan.setAttribute('gcg.vertex.sample', text.slice(0, 32));
+
+            // normal
+            return {
+                outcome: 'ok' as const,
+                status_code: 200,
+                security_flag: false,
+                tool_calls: 0,
+                cost_usd: costByScenario.normal,
+                response_text: text || 'OK',
+            };
+        }
+
         const policySpan = tracer.startSpan('gcg.policy.evaluate', undefined, scenarioCtx);
         try {
             const triggered = args.scenario === 'security';
@@ -33,13 +56,6 @@ export async function runScenario(
         } finally {
             policySpan.end();
         }
-
-        const costByScenario: Record<Scenario, number> = {
-            normal: 0.02,
-            latency: 0.05,
-            error: 0.01,
-            security: 0.5,
-        };
 
         if (args.scenario === 'latency') {
             const sleepSpan = tracer.startSpan('gcg.synthetic.sleep', undefined, scenarioCtx);
@@ -96,7 +112,6 @@ export async function runScenario(
             };
         }
 
-        // normal
         return {
             outcome: 'ok' as const,
             status_code: 200,
