@@ -1,74 +1,74 @@
 {
-  "monitors": [
-    {
-      "name": "[GCG] Latency Regression (slow runs > 3s)",
-      "type": "metric alert",
-      "query": "count(v: v>3000):gcg.run.duration_ms{scenario:latency}.as_count() > 3",
-      "message": "🐌 Latency regression: >3 runs exceeded 3000ms in 1m (scenario:latency)\n\nRunbook:\nCONTAIN: pause traffic; increase min instances\nDIAGNOSE: open APM traces filtered by scenario:latency\nMITIGATE: reduce prompt/max_output_tokens; keep warm instances\nVERIFY: slow-run count returns to 0\n\n@incident-gcg-latency",
-      "tags": ["team:hackathon", "project:gcg", "monitor:latency"],
-      "priority": 2,
-      "options": {
-        "include_tags": true,
-        "notify_no_data": false,
-        "renotify_interval": 0,
-        "thresholds": { "critical": 3, "warning": 1 }
-      }
-    },
-    {
-      "name": "[GCG] Error Rate Spike (>20%)",
-      "type": "metric alert",
-      "query": "sum(last_1m):gcg.run.errors{scenario:error}.as_count() / sum(last_1m):gcg.run.hits{scenario:error}.as_count() > 0.2",
-      "message": "💥 Error rate spike: errors/hits > 20% (scenario:error)\n\nRunbook:\nCONTAIN: pause traffic generator\nDIAGNOSE: open error traces (scenario:error)\nMITIGATE: fix handler / rollback\nVERIFY: error rate < 5%\n\n@incident-gcg-errors",
-      "tags": ["team:hackathon", "project:gcg", "monitor:errors"],
-      "priority": 1,
-      "options": {
-        "include_tags": true,
-        "notify_no_data": false,
-        "renotify_interval": 0,
-        "thresholds": { "critical": 0.2, "warning": 0.1 }
-      }
-    },
-    {
-      "name": "[GCG] Security Event Detected",
-      "type": "metric alert",
-      "query": "sum(last_1m):gcg.security.events{scenario:security}.as_count() > 0",
-      "message": "🔒 Security event detected (scenario:security)\n\nRunbook:\nCONTAIN: throttle / block abusive pattern\nDIAGNOSE: open traces filtered by scenario:security\nMITIGATE: tighten policy ladder rules\nVERIFY: security events return to 0\n\n@incident-gcg-security",
-      "tags": ["team:hackathon", "project:gcg", "monitor:security"],
-      "priority": 1,
-      "options": {
-        "include_tags": true,
-        "notify_no_data": false,
-        "renotify_interval": 0,
-        "thresholds": { "critical": 0 }
-      }
-    },
-    {
-      "name": "[GCG] Cost Spike (>$2 in 2m)",
-      "type": "metric alert",
-      "query": "sum(last_2m):gcg.cost.usd{*}.as_count() > 2",
-      "message": "💰 Cost spike: estimated cost > $2 over 2m\n\nRunbook:\nCONTAIN: throttle traffic generator\nDIAGNOSE: check cost by scenario (dashboard)\nMITIGATE: lower max_output_tokens; cap prompt length\nVERIFY: cost returns to baseline\n\n@incident-gcg-cost",
-      "tags": ["team:hackathon", "project:gcg", "monitor:cost"],
-      "priority": 2,
-      "options": {
-        "include_tags": true,
-        "notify_no_data": false,
-        "renotify_interval": 0,
-        "thresholds": { "critical": 2, "warning": 1 }
-      }
-    },
-    {
-      "name": "[GCG] Excessive Tool Calls (>40 in 1m)",
-      "type": "metric alert",
-      "query": "sum(last_1m):gcg.tool.calls{scenario:security}.as_count() > 40",
-      "message": "🔧 Tool abuse: tool calls > 40 in 1m (scenario:security)\n\nRunbook:\nCONTAIN: enforce max tool calls / throttle\nDIAGNOSE: inspect traces for repeated tool spans\nMITIGATE: hard cap tool calls per run\nVERIFY: tool calls drop under threshold\n\n@incident-gcg-tools",
-      "tags": ["team:hackathon", "project:gcg", "monitor:tool-abuse"],
-      "priority": 3,
-      "options": {
-        "include_tags": true,
-        "notify_no_data": false,
-        "renotify_interval": 0,
-        "thresholds": { "critical": 40, "warning": 25 }
-      }
-    }
-  ]
+    "monitors": [
+        {
+            "name": "[GCG] Latency Regression (slow runs > 3s)",
+            "type": "metric alert",
+            "query": "count(v: v>3000):gcg.run.duration_ms{scenario:latency}.as_count() > 3",
+            "message": "Latency regression: >3 runs exceeded 3000ms in 1m (scenario:latency)\n\nRunbook:\nCONTAIN: pause traffic; increase min instances\nDIAGNOSE: open APM traces filtered by scenario:latency\nMITIGATE: reduce prompt/max_output_tokens; keep warm instances\nVERIFY: slow-run count returns to 0\n\n@incident-gcg-latency",
+            "tags": ["team:hackathon", "project:gcg", "monitor:latency"],
+            "priority": 2,
+            "options": {
+                "include_tags": true,
+                "notify_no_data": false,
+                "renotify_interval": 0,
+                "thresholds": { "critical": 3, "warning": 1 }
+            }
+        },
+        {
+            "name": "[GCG] Error Rate Spike (>20%)",
+            "type": "metric alert",
+            "query": "sum(last_1m):gcg.run.errors{scenario:error}.as_count() / sum(last_1m):gcg.run.hits{scenario:error}.as_count() > 0.2",
+            "message": "Error rate spike: errors/hits > 20% (scenario:error)\n\nRunbook:\nCONTAIN: pause traffic generator\nDIAGNOSE: open error traces (scenario:error)\nMITIGATE: fix handler / rollback\nVERIFY: error rate < 5%\n\n@incident-gcg-errors",
+            "tags": ["team:hackathon", "project:gcg", "monitor:errors"],
+            "priority": 1,
+            "options": {
+                "include_tags": true,
+                "notify_no_data": false,
+                "renotify_interval": 0,
+                "thresholds": { "critical": 0.2, "warning": 0.1 }
+            }
+        },
+        {
+            "name": "[GCG] Security Event Detected",
+            "type": "metric alert",
+            "query": "sum(last_1m):gcg.security.events{scenario:security}.as_count() > 0",
+            "message": "Security event detected (scenario:security)\n\nRunbook:\nCONTAIN: throttle / block abusive pattern\nDIAGNOSE: open traces filtered by scenario:security\nMITIGATE: tighten policy ladder rules\nVERIFY: security events return to 0\n\n@incident-gcg-security",
+            "tags": ["team:hackathon", "project:gcg", "monitor:security"],
+            "priority": 1,
+            "options": {
+                "include_tags": true,
+                "notify_no_data": false,
+                "renotify_interval": 0,
+                "thresholds": { "critical": 0 }
+            }
+        },
+        {
+            "name": "[GCG] Cost Spike (>$2 in 2m)",
+            "type": "metric alert",
+            "query": "sum(last_2m):gcg.cost.usd{*}.as_count() > 2",
+            "message": "Cost spike: estimated cost > $2 over 2m\n\nRunbook:\nCONTAIN: throttle traffic generator\nDIAGNOSE: check cost by scenario (dashboard)\nMITIGATE: lower max_output_tokens; cap prompt length\nVERIFY: cost returns to baseline\n\n@incident-gcg-cost",
+            "tags": ["team:hackathon", "project:gcg", "monitor:cost"],
+            "priority": 2,
+            "options": {
+                "include_tags": true,
+                "notify_no_data": false,
+                "renotify_interval": 0,
+                "thresholds": { "critical": 2, "warning": 1 }
+            }
+        },
+        {
+            "name": "[GCG] Excessive Tool Calls (>40 in 1m)",
+            "type": "metric alert",
+            "query": "sum(last_1m):gcg.tool.calls{scenario:security}.as_count() > 40",
+            "message": "Tool abuse: tool calls > 40 in 1m (scenario:security)\n\nRunbook:\nCONTAIN: enforce max tool calls / throttle\nDIAGNOSE: inspect traces for repeated tool spans\nMITIGATE: hard cap tool calls per run\nVERIFY: tool calls drop under threshold\n\n@incident-gcg-tools",
+            "tags": ["team:hackathon", "project:gcg", "monitor:tool-abuse"],
+            "priority": 3,
+            "options": {
+                "include_tags": true,
+                "notify_no_data": false,
+                "renotify_interval": 0,
+                "thresholds": { "critical": 40, "warning": 25 }
+            }
+        }
+    ]
 }
