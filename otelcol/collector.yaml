@@ -1,56 +1,58 @@
 receivers:
-  otlp:
-    protocols:
-      http:
-        endpoint: 0.0.0.0:4318
-      grpc:
-        endpoint: 0.0.0.0:4317
+    otlp:
+        protocols:
+            http:
+                endpoint: 0.0.0.0:4318
+            grpc:
+                endpoint: 0.0.0.0:4317
 
 processors:
-  memory_limiter:
-    check_interval: 1s
-    limit_percentage: 80
-    spike_limit_percentage: 25
-  batch:
-    timeout: 10s
-    send_batch_size: 256
+    memory_limiter:
+        check_interval: 1s
+        limit_percentage: 80
+        spike_limit_percentage: 25
+    batch:
+        timeout: 10s
+        send_batch_size: 256
 
 connectors:
-  datadog/connector: {}
+    datadog/connector: {}
 
 exporters:
-  datadog/exporter:
-    api:
-      site: ${env:DD_SITE}
-      key: ${env:DD_API_KEY}
+    datadog/exporter:
+        api:
+            site: ${env:DD_SITE}
+            key: ${env:DD_API_KEY}
+        metrics:
+            resource_attributes_as_tags: true
 
 extensions:
-  health_check:
-    endpoint: 0.0.0.0:13133
+    health_check:
+        endpoint: 0.0.0.0:13133
 
 service:
-  extensions: [health_check]
-  pipelines:
-    # 1) Receive OTLP traces from your app and feed them into the Datadog connector
-    traces:
-      receivers: [otlp]
-      processors: [memory_limiter, batch]
-      exporters: [datadog/connector]
+    extensions: [health_check]
+    pipelines:
+        # 1) Receive OTLP traces from your app and feed them into the Datadog connector
+        traces:
+            receivers: [otlp]
+            processors: [memory_limiter, batch]
+            exporters: [datadog/connector]
 
-    # 2) Datadog connector output -> Datadog exporter (actual send to Datadog)
-    traces/dd:
-      receivers: [datadog/connector]
-      processors: [memory_limiter, batch]
-      exporters: [datadog/exporter]
+        # 2) Datadog connector output -> Datadog exporter (actual send to Datadog)
+        traces/dd:
+            receivers: [datadog/connector]
+            processors: [memory_limiter, batch]
+            exporters: [datadog/exporter]
 
-    # 3) Datadog connector can also emit APM-derived metrics
-    metrics/apm:
-      receivers: [datadog/connector]
-      processors: [memory_limiter, batch]
-      exporters: [datadog/exporter]
+        # 3) Datadog connector can also emit APM-derived metrics
+        metrics/apm:
+            receivers: [datadog/connector]
+            processors: [memory_limiter, batch]
+            exporters: [datadog/exporter]
 
-    # 4) Receive OTLP metrics from your app and send them to Datadog
-    metrics/otlp:
-      receivers: [otlp]
-      processors: [memory_limiter, batch]
-      exporters: [datadog/exporter]
+        # 4) Receive OTLP metrics from your app and send them to Datadog
+        metrics/otlp:
+            receivers: [otlp]
+            processors: [memory_limiter, batch]
+            exporters: [datadog/exporter]
