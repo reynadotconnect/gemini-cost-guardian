@@ -2,7 +2,7 @@
 
 **Gemini Cost Guardian**: A production-ready end-to-end LLM observability solution for Vertex AI/Gemini, with Datadog integration for comprehensive monitoring, alerting, and cost control.
 
-Datadog Org: <REPLACE_WITH_YOUR_DATADOG_ORG_NAME>  
+Datadog Org: N/A  
 Datadog Site: us5.datadoghq.com
 
 ## Architecture
