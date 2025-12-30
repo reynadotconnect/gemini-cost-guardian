@@ -117,6 +117,35 @@ gcloud run services describe gemini-cost-guardian --region=us-central1 --format=
 
 ### 1. Generate Traffic
 
+```bash
+cp traffic/.env.example traffic/.env
+```
+
+Edit `traffic/.env` with your configuration:
+
+```env
+# Target (deployed Cloud Run URL)
+GCG_BASE_URL=https://gemini-cost-guardian-680500283174.us-central1.run.app/
+GCG_TRAFFIC_SESSION_ID="demo-2025-12-26"
+
+# Generator behavior
+GCG_RPS=2
+GCG_MAX_INFLIGHT=12
+GCG_REQUEST_TIMEOUT_MS=30000
+
+# Sustain time (set >= your monitor window reality)
+# If any monitor is last_5m, use 180000–300000.
+GCG_SUSTAIN_MS=120000
+
+# Probe targets (should match what your scenarios actually emit)
+GCG_LATENCY_TARGET_MS=3000
+
+# IMPORTANT: your security scenario thresholds are higher than the monitor thresholds.
+# If you want the generator to "prove" the security scenario itself, use these:
+GCG_TOOLCALL_TARGET=60
+GCG_COST_TARGET_USD=0.25
+```
+
 Run the traffic generator against your Cloud Run URL:
 
 ```bash
