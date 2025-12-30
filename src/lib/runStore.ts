@@ -1,6 +1,9 @@
 export type RunRecord = {
     run_id: string;
     scenario: string;
+    traffic_session: string | undefined;
+    traffic_phase: string | undefined;
+    traffic_seq: string | undefined;
     outcome: string;
     status_code: number;
     duration_ms: number;
@@ -8,6 +11,9 @@ export type RunRecord = {
     tool_calls: number;
     security_flag: boolean;
     created_at: string;
+    prompt_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
 };
 
 declare global {
