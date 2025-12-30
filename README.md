@@ -5,6 +5,9 @@
 Datadog Org: N/A  
 Datadog Site: us5.datadoghq.com
 
+Dashboard: https://p.us5.datadoghq.com/sb/a051f833-ddce-11f0-9a99-c218239311e4-bcdc63709351afd47107858e2ebede75
+Web: https://gemini-cost-guardian-680500283174.us-central1.run.app/
+
 ## Architecture
 
 ```mermaid
