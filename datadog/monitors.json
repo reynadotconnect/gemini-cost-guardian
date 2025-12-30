@@ -159,7 +159,7 @@
             "name": "Latency regression on baseline",
             "type": "query alert",
             "query": "percentile(last_5m):p95:gcg.run.duration_ms{service:gemini-cost-guardian,env:dev,scenario:baseline} > 1500",
-            "message": "What: Baseline latency regression (p95) (env=dev, scenario=baseline)\n\nValue: {{value}}\n\nTrace search:\nservice:gemini-cost-guardian env:dev scenario:baseline\n\nTriage:\n1) Open slowest trace in the alert window.\n2) Identify which span dominates (gemini.call vs tool.call vs app logic).\n3) Check tokens/cost/tool calls on the trace to see if payload grew.\n\nMitigation:\n- Reduce maxOutputTokens / truncate context.\n- Reduce tool call fan-out or add caching.\n\nEscalate: @incident-gcg",
+            "message": "What: Baseline latency regression (p95) (env=dev, scenario=baseline)\n\nValue: {{value}}\n\nTrace search:\nservice:gemini-cost-guardian env:dev scenario:baseline\n\nTriage:\n1) Open the slowest trace in the alert window.\n2) In the waterfall, start at gcg.scenario.execute and confirm whether time is dominated by:\n   - gcg.synthetic.sleep (intentional injection / test config)\n   - the scenario execution span itself (real downstream work)\n3) On the gcg.run span, check attributes:\n   gcg.duration_ms, gcg.status_code, gcg.cost_usd, gcg.tool_calls, gcg.security_flag\n\nMitigation:\n- If synthetic sleep: reduce GCG_LATENCY_INJECT_MS or adjust demo thresholds.\n- If real downstream work: cap maxOutputTokens, truncate context, reduce retries/tool fan-out.",
             "tags": [],
             "options": {
                 "thresholds": {
