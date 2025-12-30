@@ -1,0 +1,19 @@
+{
+    "id": 17286434,
+    "name": "GCG (dev) SLO burn — success rate",
+    "type": "slo alert",
+    "query": "error_budget(\"fe21857272c85af6b685a6a541c6d448\").over(\"7d\") > 100",
+    "message": "SLO breached: GCG success rate (excluding security).\n\nTrace search:\nservice:gemini-cost-guardian env:dev !scenario:security\n\nNext steps:\n1) Check monitor status for Error rate (scenario:error) and Cost/min (scenario:latency).\n2) Open recent error traces and inspect gcg.vertex.generate_content span.\n3) Mitigation: cap retries, add backoff, fail-fast on invalid config.\n@incident-gcg",
+    "tags": [],
+    "options": {
+        "thresholds": {
+            "critical": 100
+        },
+        "notify_no_data": false,
+        "notify_audit": false,
+        "new_host_delay": 300,
+        "include_tags": true
+    },
+    "priority": null,
+    "draft_status": "published"
+}

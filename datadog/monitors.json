@@ -1,74 +1,215 @@
 {
     "monitors": [
         {
-            "name": "[GCG] Latency Regression (slow runs > 3s)",
-            "type": "metric alert",
-            "query": "count(v: v>3000):gcg.run.duration_ms{scenario:latency}.as_count() > 3",
-            "message": "Latency regression: >3 runs exceeded 3000ms in 1m (scenario:latency)\n\nRunbook:\nCONTAIN: pause traffic; increase min instances\nDIAGNOSE: open APM traces filtered by scenario:latency\nMITIGATE: reduce prompt/max_output_tokens; keep warm instances\nVERIFY: slow-run count returns to 0\n\n@incident-gcg-latency",
-            "tags": ["team:hackathon", "project:gcg", "monitor:latency"],
-            "priority": 2,
+            "id": 17343396,
+            "name": "Error Rate Spike",
+            "type": "query alert",
+            "query": "avg(last_5m):sum:gcg.run.errors{service:gemini-cost-guardian,env:dev}.as_rate() + sum:gcg.run.hits{service:gemini-cost-guardian,env:dev}.as_rate() > 0.05",
+            "message": "What: Error rate spike (env=dev)\n\nValue: {{value}}\nQuery: errors/hits rate ratio\n\nTrace search:\nservice:gemini-cost-guardian env:dev\n\nTriage:\n1) Open APM Traces with the filter above.\n2) Sort by Errors and open a failing trace.\n3) Check span tags: scenario, model, status, gcg.tokens.total, gcg.cost.usd, gcg.tool.calls.\n\nMitigation:\n- Roll back latest change OR disable the failing scenario path.\n- Add retries/backoff only if failures are transient.\n\nEscalate: @incident-gcg",
+            "tags": [],
             "options": {
-                "include_tags": true,
-                "notify_no_data": false,
-                "renotify_interval": 0,
-                "thresholds": { "critical": 3, "warning": 1 }
-            }
+                "thresholds": {
+                    "critical": 0.05
+                },
+                "notify_audit": false,
+                "on_missing_data": "default",
+                "include_tags": false,
+                "new_host_delay": 300
+            },
+            "priority": null,
+            "draft_status": "published"
         },
         {
-            "name": "[GCG] Error Rate Spike (>20%)",
-            "type": "metric alert",
-            "query": "sum(last_1m):gcg.run.errors{scenario:error}.as_count() / sum(last_1m):gcg.run.hits{scenario:error}.as_count() > 0.2",
-            "message": "Error rate spike: errors/hits > 20% (scenario:error)\n\nRunbook:\nCONTAIN: pause traffic generator\nDIAGNOSE: open error traces (scenario:error)\nMITIGATE: fix handler / rollback\nVERIFY: error rate < 5%\n\n@incident-gcg-errors",
-            "tags": ["team:hackathon", "project:gcg", "monitor:errors"],
-            "priority": 1,
+            "id": 17344027,
+            "name": "GCG (dev) Any detection rule firing",
+            "type": "composite",
+            "query": "17343396 || 17286169 || 17286172 || 17286679 || 17286434 || 17286182 || 17286705 || 17343436 || 17343491 || 17343542",
+            "message": "@incident-gcg",
+            "tags": [],
             "options": {
-                "include_tags": true,
+                "notify_audit": false,
                 "notify_no_data": false,
                 "renotify_interval": 0,
-                "thresholds": { "critical": 0.2, "warning": 0.1 }
-            }
+                "thresholds": {
+                    "critical": null
+                },
+                "include_tags": false,
+                "new_host_delay": 300
+            },
+            "priority": null,
+            "draft_status": "published"
         },
         {
-            "name": "[GCG] Security Event Detected",
-            "type": "metric alert",
-            "query": "sum(last_1m):gcg.security.events{scenario:security}.as_count() > 0",
-            "message": "Security event detected (scenario:security)\n\nRunbook:\nCONTAIN: throttle / block abusive pattern\nDIAGNOSE: open traces filtered by scenario:security\nMITIGATE: tighten policy ladder rules\nVERIFY: security events return to 0\n\n@incident-gcg-security",
-            "tags": ["team:hackathon", "project:gcg", "monitor:security"],
-            "priority": 1,
+            "id": 17286169,
+            "name": "GCG (dev) Cost/min spike — latency",
+            "type": "query alert",
+            "query": "avg(last_5m):sum:gcg.cost.usd{service:gemini-cost-guardian,env:dev,scenario:latency}.rollup(sum, 60) > 0.06",
+            "message": "What: Cost/min spike (scenario=latency)\n\nTrace search:\nservice:gemini-cost-guardian env:dev scenario:latency\n\nNext steps:\n1) Open slowest trace in window.\n2) Check: gcg.tokens.total, gcg.cost.usd, gcg.tool.calls.\n3) Mitigation: cap maxOutputTokens, reduce retries, truncate context.\n@incident-gcg",
+            "tags": [],
             "options": {
-                "include_tags": true,
-                "notify_no_data": false,
-                "renotify_interval": 0,
-                "thresholds": { "critical": 0 }
-            }
+                "thresholds": {
+                    "critical": 0.06,
+                    "warning": 0.04
+                },
+                "notify_audit": false,
+                "on_missing_data": "default",
+                "include_tags": false,
+                "new_host_delay": 300
+            },
+            "priority": null,
+            "draft_status": "published"
         },
         {
-            "name": "[GCG] Cost Spike (>$2 in 2m)",
-            "type": "metric alert",
-            "query": "sum(last_2m):gcg.cost.usd{*}.as_count() > 2",
-            "message": "Cost spike: estimated cost > $2 over 2m\n\nRunbook:\nCONTAIN: throttle traffic generator\nDIAGNOSE: check cost by scenario (dashboard)\nMITIGATE: lower max_output_tokens; cap prompt length\nVERIFY: cost returns to baseline\n\n@incident-gcg-cost",
-            "tags": ["team:hackathon", "project:gcg", "monitor:cost"],
-            "priority": 2,
+            "id": 17286172,
+            "name": "GCG (dev) Error rate — scenario:error",
+            "type": "query alert",
+            "query": "sum(last_5m):sum:gcg.run.errors{service:gemini-cost-guardian,env:dev,scenario:error}.as_count() / sum:gcg.run.hits{service:gemini-cost-guardian,env:dev,scenario:error}.as_count() > 0.5",
+            "message": "What: Error-rate spike (scenario=error)\n\nTrace search:\nservice:gemini-cost-guardian env:dev scenario:error\n\nNext steps:\n1) Open an error trace and inspect gcg.vertex.generate_content span.\n2) Confirm retry storm behavior and the failure mode.\n3) Mitigation: cap retries, add backoff, fail-fast on invalid config.\n@incident-gcg",
+            "tags": [],
             "options": {
-                "include_tags": true,
-                "notify_no_data": false,
-                "renotify_interval": 0,
-                "thresholds": { "critical": 2, "warning": 1 }
-            }
+                "thresholds": {
+                    "critical": 0.5
+                },
+                "notify_audit": false,
+                "on_missing_data": "default",
+                "include_tags": false,
+                "new_host_delay": 300
+            },
+            "priority": null,
+            "draft_status": "published"
         },
         {
-            "name": "[GCG] Excessive Tool Calls (>40 in 1m)",
-            "type": "metric alert",
-            "query": "sum(last_1m):gcg.tool.calls{scenario:security}.as_count() > 40",
-            "message": "Tool abuse: tool calls > 40 in 1m (scenario:security)\n\nRunbook:\nCONTAIN: enforce max tool calls / throttle\nDIAGNOSE: inspect traces for repeated tool spans\nMITIGATE: hard cap tool calls per run\nVERIFY: tool calls drop under threshold\n\n@incident-gcg-tools",
-            "tags": ["team:hackathon", "project:gcg", "monitor:tool-abuse"],
-            "priority": 3,
+            "id": 17286679,
+            "name": "GCG (dev) Latency p95 — scenario:latency",
+            "type": "query alert",
+            "query": "percentile(last_5m):p95:gcg.run.duration_ms{service:gemini-cost-guardian,env:dev,scenario:latency} > 4000",
+            "message": "What: Latency spike (scenario=latency)\n\nTrace search:\nservice:gemini-cost-guardian env:dev scenario:latency\n\nNext steps:\n1) Open the slowest trace in the alert window.\n2) Check gcg.tokens.total and model span duration.\n3) Mitigation: reduce maxOutputTokens / truncate context / reduce retries.\n@incident-gcg",
+            "tags": [],
             "options": {
-                "include_tags": true,
+                "thresholds": {
+                    "critical": 4000
+                },
+                "notify_audit": false,
+                "on_missing_data": "default",
+                "include_tags": false,
+                "new_host_delay": 300
+            },
+            "priority": null,
+            "draft_status": "published"
+        },
+        {
+            "id": 17286434,
+            "name": "GCG (dev) SLO burn — success rate",
+            "type": "slo alert",
+            "query": "error_budget(\"fe21857272c85af6b685a6a541c6d448\").over(\"7d\") > 100",
+            "message": "SLO breached: GCG success rate (excluding security).\n\nTrace search:\nservice:gemini-cost-guardian env:dev !scenario:security\n\nNext steps:\n1) Check monitor status for Error rate (scenario:error) and Cost/min (scenario:latency).\n2) Open recent error traces and inspect gcg.vertex.generate_content span.\n3) Mitigation: cap retries, add backoff, fail-fast on invalid config.\n@incident-gcg",
+            "tags": [],
+            "options": {
+                "thresholds": {
+                    "critical": 100
+                },
                 "notify_no_data": false,
-                "renotify_interval": 0,
-                "thresholds": { "critical": 40, "warning": 25 }
-            }
+                "notify_audit": false,
+                "new_host_delay": 300,
+                "include_tags": true
+            },
+            "priority": null,
+            "draft_status": "published"
+        },
+        {
+            "id": 17286182,
+            "name": "GCG (dev) Security events — blocked",
+            "type": "query alert",
+            "query": "sum(last_5m):sum:gcg.security.events{service:gemini-cost-guardian,env:dev}.as_count() > 0",
+            "message": "What: Security event detected\n\nExpectation: blocked before model (tokens≈0, cost≈0)\n\nTrace search:\nservice:gemini-cost-guardian env:dev scenario:security\n\nNext steps:\n1) Verify policy shows BLOCK and no gcg.vertex.* span executed.\n2) Identify source pattern; tighten policy if repeated.\n@incident-gcg",
+            "tags": [],
+            "options": {
+                "thresholds": {
+                    "critical": 0
+                },
+                "notify_audit": false,
+                "on_missing_data": "default",
+                "include_tags": false,
+                "new_host_delay": 300
+            },
+            "priority": null,
+            "draft_status": "published"
+        },
+        {
+            "id": 17286705,
+            "name": "GCG (dev) Tool calls/min spike",
+            "type": "query alert",
+            "query": "sum(last_5m):sum:gcg.tool.calls{service:gemini-cost-guardian,env:dev}.rollup(sum, 60) > 200",
+            "message": "What: Tool calls/min spike (possible retry loop / abuse).\n\nDashboards:\n- Tool calls/min: sum:gcg.tool.calls{service:gemini-cost-guardian,env:dev}.rollup(sum,60)\n\nTrace search:\nservice:gemini-cost-guardian env:dev\n\nNext steps:\n1) Open traces in alert window; filter to scenario with highest volume.\n2) Check attributes: gcg.tool.calls, gcg.tokens.total, gcg.cost.usd.\n3) Identify loops (retries/tool spam). Mitigation: cap retries, add backoff, enforce request budget, cap maxOutputTokens.\n@incident-gcg",
+            "tags": [],
+            "options": {
+                "thresholds": {
+                    "critical": 200
+                },
+                "notify_audit": false,
+                "on_missing_data": "default",
+                "include_tags": false,
+                "new_host_delay": 300
+            },
+            "priority": null,
+            "draft_status": "published"
+        },
+        {
+            "id": 17343436,
+            "name": "Latency regression on baseline",
+            "type": "query alert",
+            "query": "percentile(last_5m):p95:gcg.run.duration_ms{service:gemini-cost-guardian,env:dev,scenario:baseline} > 1500",
+            "message": "What: Baseline latency regression (p95) (env=dev, scenario=baseline)\n\nValue: {{value}}\n\nTrace search:\nservice:gemini-cost-guardian env:dev scenario:baseline\n\nTriage:\n1) Open slowest trace in the alert window.\n2) Identify which span dominates (gemini.call vs tool.call vs app logic).\n3) Check tokens/cost/tool calls on the trace to see if payload grew.\n\nMitigation:\n- Reduce maxOutputTokens / truncate context.\n- Reduce tool call fan-out or add caching.\n\nEscalate: @incident-gcg",
+            "tags": [],
+            "options": {
+                "thresholds": {
+                    "critical": 1500
+                },
+                "notify_audit": false,
+                "on_missing_data": "default",
+                "include_tags": false,
+                "new_host_delay": 300
+            },
+            "priority": null,
+            "draft_status": "published"
+        },
+        {
+            "id": 17343491,
+            "name": "Telemetry ingestion / app deadness (RPS drops)",
+            "type": "query alert",
+            "query": "avg(last_10m):sum:gcg.run.hits{service:gemini-cost-guardian,env:dev}.as_rate() < 0.01",
+            "message": "What: RPS dropped / missing telemetry (env=dev)\n\nValue: {{value}}\n\nChecks:\n1) Dashboard RPS widget for env=dev.\n2) Cloud Run revision health + recent deploys.\n3) OTel Collector logs for exporter errors.\n\nMitigation:\n- Re-deploy last known good revision.\n- Verify OTLP endpoint (localhost:4318) and DD exporter config.\n\nEscalate: @incident-gcg",
+            "tags": [],
+            "options": {
+                "thresholds": {
+                    "critical": 0.01
+                },
+                "notify_audit": false,
+                "on_missing_data": "default",
+                "include_tags": false,
+                "new_host_delay": 300
+            },
+            "priority": null,
+            "draft_status": "published"
+        },
+        {
+            "id": 17343542,
+            "name": "Tokens/request spike",
+            "type": "query alert",
+            "query": "avg(last_5m):sum:gcg.tokens.total{service:gemini-cost-guardian,env:dev}.as_rate() / sum:gcg.run.hits{service:gemini-cost-guardian,env:dev}.as_rate() > 1000",
+            "message": "What: Tokens/request spike (env=dev)\n\nValue: {{value}}\n\nTrace search:\nservice:gemini-cost-guardian env:dev\n\nTriage:\n1) Open a high-token trace and inspect prompt/context size.\n2) Check if tool calls increased (fan-out).\n3) Compare scenario tag to see if it's isolated or widespread.\n\nMitigation:\n- Cap maxOutputTokens.\n- Truncate conversation/context.\n- Reduce tool call count; cache tool responses.\n\nEscalate: @incident-gcg",
+            "tags": [],
+            "options": {
+                "thresholds": {
+                    "critical": 1000
+                },
+                "notify_audit": false,
+                "on_missing_data": "default",
+                "include_tags": false,
+                "new_host_delay": 300
+            },
+            "priority": null,
+            "draft_status": "published"
         }
     ]
 }

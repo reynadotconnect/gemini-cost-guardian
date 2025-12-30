@@ -1,6 +1,634 @@
 {
-    "title": "[GCG] Judge Dashboard",
-    "description": "Export the real dashboard from Datadog UI on Day 4-5 and replace this file.",
-    "layout_type": "free",
-    "widgets": []
+    "title": "Gemini Cost Guardian - Judge View",
+    "description": "[[suggested_dashboards]]",
+    "widgets": [
+        {
+            "id": 7442525770137193,
+            "definition": {
+                "type": "free_text",
+                "text": "Health",
+                "color": "#4d4d4d",
+                "font_size": "auto",
+                "text_align": "left"
+            },
+            "layout": { "x": 0, "y": 0, "width": 2, "height": 1 }
+        },
+        {
+            "id": 8176149000052550,
+            "definition": {
+                "title": "RPS",
+                "title_size": "16",
+                "title_align": "left",
+                "show_legend": true,
+                "legend_layout": "auto",
+                "legend_columns": ["avg", "min", "max", "value", "sum"],
+                "type": "timeseries",
+                "requests": [
+                    {
+                        "response_format": "timeseries",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.run.hits{service:gemini-cost-guardian, env:dev}.as_rate()"
+                            }
+                        ],
+                        "formulas": [{ "formula": "query1" }],
+                        "style": {
+                            "palette": "dog_classic",
+                            "order_by": "values",
+                            "line_type": "solid",
+                            "line_width": "normal"
+                        },
+                        "display_type": "line"
+                    }
+                ]
+            },
+            "layout": { "x": 0, "y": 1, "width": 12, "height": 2 }
+        },
+        {
+            "id": 649535149985102,
+            "definition": {
+                "title": "Error Rate",
+                "title_size": "16",
+                "title_align": "left",
+                "show_legend": true,
+                "legend_layout": "auto",
+                "legend_columns": ["avg", "min", "max", "value", "sum"],
+                "type": "timeseries",
+                "requests": [
+                    {
+                        "response_format": "timeseries",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.run.errors{service:gemini-cost-guardian, env:dev}.as_rate()"
+                            },
+                            {
+                                "name": "query2",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.run.hits{service:gemini-cost-guardian, env:dev}.as_rate()"
+                            }
+                        ],
+                        "formulas": [
+                            { "formula": "query1" },
+                            { "formula": "query2" },
+                            { "formula": "query1 / query2" }
+                        ],
+                        "style": {
+                            "palette": "dog_classic",
+                            "order_by": "values",
+                            "line_type": "solid",
+                            "line_width": "normal"
+                        },
+                        "display_type": "line"
+                    }
+                ]
+            },
+            "layout": { "x": 0, "y": 3, "width": 12, "height": 2 }
+        },
+        {
+            "id": 4214972046899812,
+            "definition": {
+                "title": "Latency",
+                "title_size": "16",
+                "title_align": "left",
+                "type": "toplist",
+                "requests": [
+                    {
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "p95:gcg.run.duration_ms{service:gemini-cost-guardian,env:dev} by {scenario}",
+                                "aggregator": "percentile"
+                            }
+                        ],
+                        "response_format": "scalar",
+                        "formulas": [{ "formula": "query1" }],
+                        "sort": {
+                            "count": 10,
+                            "order_by": [{ "type": "formula", "index": 0, "order": "desc" }]
+                        }
+                    }
+                ],
+                "style": {
+                    "display": { "type": "stacked", "legend": "automatic" },
+                    "palette": "dog_classic"
+                }
+            },
+            "layout": { "x": 0, "y": 5, "width": 12, "height": 2 }
+        },
+        {
+            "id": 6377372205919514,
+            "definition": {
+                "title": "",
+                "title_size": "16",
+                "title_align": "left",
+                "type": "slo",
+                "slo_id": "fe21857272c85af6b685a6a541c6d448",
+                "view_type": "detail",
+                "view_mode": "overall",
+                "time_windows": ["7d", "week_to_date", "global_time"],
+                "show_error_budget": true
+            },
+            "layout": { "x": 0, "y": 7, "width": 12, "height": 4 }
+        },
+        {
+            "id": 1368439756550249,
+            "definition": {
+                "type": "free_text",
+                "text": "Cost & Tokens",
+                "color": "#4d4d4d",
+                "font_size": "auto",
+                "text_align": "left"
+            },
+            "layout": { "x": 0, "y": 11, "width": 2, "height": 1 }
+        },
+        {
+            "id": 1232765735206422,
+            "definition": {
+                "title": "Cost/min",
+                "title_size": "16",
+                "title_align": "left",
+                "show_legend": true,
+                "legend_layout": "auto",
+                "legend_columns": ["avg", "min", "max", "value", "sum"],
+                "type": "timeseries",
+                "requests": [
+                    {
+                        "response_format": "timeseries",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.cost.usd{service:gemini-cost-guardian, env:dev}.rollup(sum, 60)"
+                            }
+                        ],
+                        "formulas": [{ "formula": "query1" }],
+                        "style": {
+                            "palette": "dog_classic",
+                            "order_by": "values",
+                            "line_type": "solid",
+                            "line_width": "normal"
+                        },
+                        "display_type": "line"
+                    }
+                ]
+            },
+            "layout": { "x": 0, "y": 12, "width": 12, "height": 2 }
+        },
+        {
+            "id": 3928275201246191,
+            "definition": {
+                "title": "Cost/min (current)",
+                "title_size": "16",
+                "title_align": "left",
+                "time": { "type": "live", "unit": "minute", "value": 5 },
+                "type": "query_value",
+                "requests": [
+                    {
+                        "response_format": "scalar",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.cost.usd{service:gemini-cost-guardian, env:dev}.rollup(sum, 60)",
+                                "aggregator": "last"
+                            }
+                        ],
+                        "formulas": [
+                            {
+                                "number_format": {
+                                    "unit": { "type": "canonical_unit", "unit_name": "dollar" }
+                                },
+                                "formula": "query1"
+                            }
+                        ]
+                    }
+                ],
+                "autoscale": true,
+                "precision": 2,
+                "timeseries_background": { "type": "bars" }
+            },
+            "layout": { "x": 0, "y": 14, "width": 12, "height": 2 }
+        },
+        {
+            "id": 3238056287178270,
+            "definition": {
+                "title": "Tokens/request",
+                "title_size": "16",
+                "title_align": "left",
+                "type": "query_value",
+                "requests": [
+                    {
+                        "response_format": "scalar",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.tokens.total{service:gemini-cost-guardian, env:dev}.as_count()",
+                                "aggregator": "avg"
+                            },
+                            {
+                                "name": "query2",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.run.hits{service:gemini-cost-guardian, env:dev}.as_count()",
+                                "aggregator": "avg"
+                            }
+                        ],
+                        "formulas": [
+                            {
+                                "number_format": { "unit": { "type": "canonical_unit" } },
+                                "formula": "query1 / query2"
+                            }
+                        ]
+                    }
+                ],
+                "autoscale": true,
+                "precision": 2,
+                "timeseries_background": { "type": "bars" }
+            },
+            "layout": { "x": 0, "y": 16, "width": 12, "height": 2 }
+        },
+        {
+            "id": 202938299450351,
+            "definition": {
+                "title": "Average cost/request",
+                "title_size": "16",
+                "title_align": "left",
+                "type": "query_value",
+                "requests": [
+                    {
+                        "response_format": "scalar",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.cost.usd{service:gemini-cost-guardian, env:dev}.as_count()",
+                                "aggregator": "avg"
+                            },
+                            {
+                                "name": "query2",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.run.hits{service:gemini-cost-guardian, env:dev}.as_count()",
+                                "aggregator": "avg"
+                            }
+                        ],
+                        "formulas": [
+                            {
+                                "number_format": {
+                                    "unit": { "type": "canonical_unit", "unit_name": "dollar" }
+                                },
+                                "formula": "query1 / query2"
+                            }
+                        ]
+                    }
+                ],
+                "autoscale": true,
+                "precision": 2,
+                "timeseries_background": { "type": "bars" }
+            },
+            "layout": { "x": 0, "y": 18, "width": 12, "height": 2 }
+        },
+        {
+            "id": 7983013868765003,
+            "definition": {
+                "title": "Effective $ / 1M tokens",
+                "title_size": "16",
+                "title_align": "left",
+                "type": "query_value",
+                "requests": [
+                    {
+                        "response_format": "scalar",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.cost.usd{service:gemini-cost-guardian, env:dev}.as_count()",
+                                "aggregator": "avg"
+                            },
+                            {
+                                "name": "query2",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.tokens.total{service:gemini-cost-guardian, env:dev}.as_count()",
+                                "aggregator": "avg"
+                            }
+                        ],
+                        "formulas": [
+                            {
+                                "number_format": {
+                                    "unit": { "type": "canonical_unit", "unit_name": "dollar" }
+                                },
+                                "formula": "1000000 * query1 / query2"
+                            }
+                        ]
+                    }
+                ],
+                "autoscale": true,
+                "precision": 2,
+                "timeseries_background": { "type": "bars" }
+            },
+            "layout": { "x": 0, "y": 20, "width": 12, "height": 2 }
+        },
+        {
+            "id": 3011679762290166,
+            "definition": {
+                "title": "Tokens per scenario",
+                "title_size": "16",
+                "title_align": "left",
+                "type": "toplist",
+                "requests": [
+                    {
+                        "queries": [
+                            {
+                                "data_source": "metrics",
+                                "name": "query1",
+                                "query": "sum:gcg.tokens.total{service:gemini-cost-guardian, env:dev} by {scenario}.as_count()",
+                                "aggregator": "avg"
+                            }
+                        ],
+                        "response_format": "scalar",
+                        "formulas": [{ "formula": "query1" }],
+                        "sort": {
+                            "count": 10,
+                            "order_by": [{ "type": "formula", "index": 0, "order": "desc" }]
+                        }
+                    }
+                ],
+                "style": { "display": { "type": "stacked", "legend": "automatic" } }
+            },
+            "layout": { "x": 0, "y": 22, "width": 12, "height": 2 }
+        },
+        {
+            "id": 3649026399485273,
+            "definition": {
+                "title": "Cost per scenario",
+                "title_size": "16",
+                "title_align": "left",
+                "type": "toplist",
+                "requests": [
+                    {
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.cost.usd{service:gemini-cost-guardian, env:dev} by {scenario}.as_count()",
+                                "aggregator": "avg"
+                            }
+                        ],
+                        "response_format": "scalar",
+                        "formulas": [
+                            {
+                                "number_format": {
+                                    "unit": { "type": "canonical_unit", "unit_name": "dollar" }
+                                },
+                                "formula": "query1"
+                            }
+                        ],
+                        "sort": {
+                            "count": 10,
+                            "order_by": [{ "type": "formula", "index": 0, "order": "desc" }]
+                        }
+                    }
+                ],
+                "style": { "display": { "type": "stacked", "legend": "automatic" } }
+            },
+            "layout": { "x": 0, "y": 24, "width": 12, "height": 2 }
+        },
+        {
+            "id": 2147913442955728,
+            "definition": {
+                "type": "free_text",
+                "text": "Security & Abuse",
+                "color": "#4d4d4d",
+                "font_size": "auto",
+                "text_align": "left"
+            },
+            "layout": { "x": 0, "y": 26, "width": 2, "height": 1 }
+        },
+        {
+            "id": 247189978885368,
+            "definition": {
+                "title": "Blocked % (security)",
+                "title_size": "16",
+                "title_align": "left",
+                "type": "query_value",
+                "requests": [
+                    {
+                        "response_format": "scalar",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.security.events{service:gemini-cost-guardian,env:dev}.as_rate()",
+                                "aggregator": "avg"
+                            },
+                            {
+                                "name": "query2",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.run.hits{service:gemini-cost-guardian,env:dev}.as_rate()",
+                                "aggregator": "avg"
+                            }
+                        ],
+                        "formulas": [{ "formula": "query1 / query2" }]
+                    }
+                ],
+                "autoscale": true,
+                "precision": 2,
+                "timeseries_background": { "type": "bars" }
+            },
+            "layout": { "x": 0, "y": 27, "width": 12, "height": 2 }
+        },
+        {
+            "id": 7720423629302633,
+            "definition": {
+                "title": "Security hits",
+                "title_size": "16",
+                "title_align": "left",
+                "type": "query_value",
+                "requests": [
+                    {
+                        "response_format": "scalar",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.run.hits{service:gemini-cost-guardian,scenario:security, env:dev}.as_count()",
+                                "aggregator": "avg"
+                            }
+                        ],
+                        "formulas": [{ "formula": "query1" }]
+                    }
+                ],
+                "autoscale": true,
+                "precision": 2,
+                "timeseries_background": { "type": "bars" }
+            },
+            "layout": { "x": 0, "y": 29, "width": 12, "height": 2 }
+        },
+        {
+            "id": 8869201620286919,
+            "definition": {
+                "title": "Security events/min",
+                "title_size": "16",
+                "title_align": "left",
+                "show_legend": true,
+                "legend_layout": "auto",
+                "legend_columns": ["avg", "min", "max", "value", "sum"],
+                "type": "timeseries",
+                "requests": [
+                    {
+                        "response_format": "timeseries",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.security.events{service:gemini-cost-guardian, env:dev}.rollup(sum, 60)"
+                            }
+                        ],
+                        "formulas": [{ "formula": "query1" }],
+                        "style": {
+                            "palette": "dog_classic",
+                            "order_by": "values",
+                            "line_type": "solid",
+                            "line_width": "normal"
+                        },
+                        "display_type": "line"
+                    }
+                ]
+            },
+            "layout": { "x": 0, "y": 31, "width": 12, "height": 2 }
+        },
+        {
+            "id": 6239282666899824,
+            "definition": {
+                "title": "Tool calls/min",
+                "title_size": "16",
+                "title_align": "left",
+                "show_legend": true,
+                "legend_layout": "auto",
+                "legend_columns": ["avg", "min", "max", "value", "sum"],
+                "type": "timeseries",
+                "requests": [
+                    {
+                        "response_format": "timeseries",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.tool.calls{service:gemini-cost-guardian, env:dev}.rollup(sum, 60)"
+                            }
+                        ],
+                        "formulas": [{ "formula": "query1" }],
+                        "style": {
+                            "palette": "dog_classic",
+                            "order_by": "values",
+                            "line_type": "solid",
+                            "line_width": "normal"
+                        },
+                        "display_type": "line"
+                    }
+                ]
+            },
+            "layout": { "x": 0, "y": 33, "width": 12, "height": 2 }
+        },
+        {
+            "id": 5779370211208048,
+            "definition": {
+                "title": "Tool calls/request",
+                "title_size": "16",
+                "title_align": "left",
+                "type": "query_value",
+                "requests": [
+                    {
+                        "response_format": "scalar",
+                        "queries": [
+                            {
+                                "name": "query1",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.tool.calls{service:gemini-cost-guardian,env:dev}.as_rate()",
+                                "aggregator": "avg"
+                            },
+                            {
+                                "name": "query2",
+                                "data_source": "metrics",
+                                "query": "sum:gcg.run.hits{service:gemini-cost-guardian,env:dev}.as_rate()",
+                                "aggregator": "avg"
+                            }
+                        ],
+                        "formulas": [{ "formula": "query1 / query2" }]
+                    }
+                ],
+                "autoscale": true,
+                "precision": 2,
+                "timeseries_background": { "type": "bars" }
+            },
+            "layout": { "x": 0, "y": 35, "width": 12, "height": 2 }
+        },
+        {
+            "id": 5782916562505691,
+            "definition": {
+                "type": "free_text",
+                "text": "Ops\n\n",
+                "color": "#4d4d4d",
+                "font_size": "auto",
+                "text_align": "left"
+            },
+            "layout": { "x": 0, "y": 37, "width": 2, "height": 1 }
+        },
+        {
+            "id": 4474392275684260,
+            "definition": {
+                "title": "",
+                "type": "manage_status",
+                "display_format": "countsAndList",
+                "color_preference": "text",
+                "hide_zero_counts": true,
+                "show_status": true,
+                "last_triggered_format": "relative",
+                "query": "gcg",
+                "sort": "status,asc",
+                "count": 50,
+                "start": 0,
+                "summary_type": "monitors",
+                "show_priority": false,
+                "show_last_triggered": false
+            },
+            "layout": { "x": 0, "y": 38, "width": 12, "height": 5 }
+        },
+        {
+            "id": 3301518684812529,
+            "definition": {
+                "title": "Open incidents",
+                "title_size": "16",
+                "title_align": "left",
+                "requests": [
+                    {
+                        "response_format": "event_list",
+                        "query": {
+                            "query_string": "",
+                            "sort": { "column": "created", "order": "desc" },
+                            "data_source": "incidents_stream"
+                        },
+                        "columns": [
+                            { "field": "id", "width": 45 },
+                            { "field": "title", "width": "auto" },
+                            { "field": "severity", "width": 80 },
+                            { "field": "state", "width": 90 },
+                            { "field": "created", "width": 60 }
+                        ]
+                    }
+                ],
+                "type": "list_stream"
+            },
+            "layout": { "x": 0, "y": 43, "width": 12, "height": 4 }
+        }
+    ],
+    "template_variables": [],
+    "layout_type": "ordered",
+    "notify_list": [],
+    "reflow_type": "fixed",
+    "pause_auto_refresh": false
 }
