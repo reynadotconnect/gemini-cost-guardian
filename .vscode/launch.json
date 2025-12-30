@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Next.js: debug server-side",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev",
+            "skipFiles": ["<node_internals>/**"],
+            "console": "integratedTerminal",
+            "env": {
+                "OTEL_SERVICE_NAME": "gemini-cost-guardian",
+                "OTEL_RESOURCE_ATTRIBUTES": "service.version=0.1.0,deployment.environment=local",
+                "OTEL_TRACES_SAMPLER": "always_on",
+                "NODE_OPTIONS": "--inspect"
+            }
+        },
+        {
+            "name": "Traffic Generator",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "tsx",
+            "runtimeArgs": ["--inspect"],
+            "program": "${workspaceFolder}/traffic/generate_traffic.ts",
+            "console": "integratedTerminal",
+            "env": {
+                "GCG_BASE_URL": "http://localhost:3000",
+                "DD_SITE": "us5.datadoghq.com",
+                "DD_API_KEY": "${env:DD_API_KEY}",
+                "NODE_OPTIONS": "--inspect"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Full Stack",
+            "configurations": ["Next.js: debug server-side", "Traffic Generator"]
+        }
+    ]
+}
