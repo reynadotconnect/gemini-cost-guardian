@@ -163,10 +163,6 @@ The following monitors should trigger during the demo:
 
 Incidents will appear in the Datadog Incidents dashboard and notify the configured on-call team.
 
-## Datadog Organization
-
-This project is configured to send telemetry to Datadog organization: **hackathon-org**
-
 ## License
 
 MIT
